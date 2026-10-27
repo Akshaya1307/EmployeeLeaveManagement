@@ -1,0 +1,86 @@
+@model List<EmployeeLeaveManagement.Models.LeaveRequest>
+
+@{
+    ViewData["Title"] = "My Leave Requests";
+}
+
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-list"></i> My Leave Requests</h4>
+            <a asp-action="Apply" class="btn btn-light">
+                <i class="fas fa-plus"></i> Apply for Leave
+            </a>
+        </div>
+        <div class="card-body">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle"></i> No leave requests found.
+                    <br />
+                    <a asp-action="Apply" class="btn btn-primary mt-2">Apply for Leave</a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover" id="leaveRequestsTable">
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Total Days</th>
+                                <th>Status</th>
+                                <th>Applied Date</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model)
+                            {
+                                <tr>
+                                    <td>@request.CategoryName</td>
+                                    <td>@request.StartDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@request.EndDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@request.TotalDays</td>
+                                    <td>
+                                        @if (request.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        }
+                                        else if (request.Status == "Approved")
+                                        {
+                                            <span class="badge bg-success">Approved</span>
+                                        }
+                                        else if (request.Status == "Rejected")
+                                        {
+                                            <span class="badge bg-danger">Rejected</span>
+                                        }
+                                    </td>
+                                    <td>@request.AppliedDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@(string.IsNullOrEmpty(request.Comments) ? "-" : request.Comments)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#leaveRequestsTable').DataTable({
+                order: [[5, 'desc']],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries"
+                }
+            });
+        });
+    </script>
+}

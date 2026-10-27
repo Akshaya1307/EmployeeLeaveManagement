@@ -1,0 +1,57 @@
+@model List<EmployeeLeaveManagement.Models.LeaveBalance>
+
+@{
+    ViewData["Title"] = "Leave Balance";
+}
+
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0"><i class="fas fa-chart-line"></i> My Leave Balance - @DateTime.Now.Year</h4>
+        </div>
+        <div class="card-body">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle"></i> No leave balance information found.
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var balance in Model)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">@balance.CategoryName</h5>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <small class="text-muted">Total Days</small>
+                                            <h3>@balance.TotalDays</h3>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Used Days</small>
+                                            <h3 class="text-warning">@balance.UsedDays</h3>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Remaining</small>
+                                            <h3 class="text-success">@balance.RemainingDays</h3>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 10px;">
+                                        @{
+                                            var percentage = balance.TotalDays > 0 ? (balance.UsedDays * 100 / balance.TotalDays) : 0;
+                                        }
+                                        <div class="progress-bar bg-success" style="width: @percentage%"></div>
+                                    </div>
+                                    <small class="text-muted">@percentage% used</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

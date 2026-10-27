@@ -1,0 +1,151 @@
+@model List<EmployeeLeaveManagement.Models.User>
+
+@{
+    ViewData["Title"] = "Manage Employees";
+}
+
+<div class="card shadow">
+
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+        <h3 class="mb-0">
+            <i class="fas fa-users"></i>
+            Employee Management
+        </h3>
+
+        <a asp-action="Create" class="btn btn-light">
+            <i class="fas fa-user-plus"></i>
+            Add Employee
+        </a>
+
+    </div>
+
+    <div class="card-body">
+
+        <table id="employeeTable" class="table table-striped table-bordered align-middle">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Employee Code</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Reporting Admin</th>
+                    <th>Join Date</th>
+                    <th>Status</th>
+                    <th width="150">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var employee in Model)
+                {
+                    <tr>
+
+                        <td>@employee.EmployeeCode</td>
+
+                        <td>@employee.FullName</td>
+
+                        <td>@employee.Email</td>
+
+                        <td>
+                            @if (employee.Role == "Admin")
+                            {
+                                <span class="badge bg-primary">
+                                    Admin
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Employee
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (employee.ManagerID == null)
+                            {
+                                <span class="text-muted">
+                                    Top Level Admin
+                                </span>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(employee.ManagerName))
+                            {
+                                <span class="fw-semibold text-primary">
+                                    @employee.ManagerName
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">
+                                    No Reporting Admin
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @employee.JoinDate.ToString("dd-MM-yyyy")
+                        </td>
+
+                        <td>
+                            @if (employee.IsActive)
+                            {
+                                <span class="badge bg-success">
+                                    Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    Inactive
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+
+                            <a asp-action="Edit"
+                               asp-route-id="@employee.EmployeeID"
+                               class="btn btn-warning btn-sm"
+                               title="Edit Employee">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <a asp-action="Delete"
+                               asp-route-id="@employee.EmployeeID"
+                               class="btn btn-danger btn-sm"
+                               title="Delete Employee"
+                               onclick="return confirm('Are you sure you want to delete this employee?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+
+            $('#employeeTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                ordering: true,
+                searching: true
+            });
+
+        });
+    </script>
+}

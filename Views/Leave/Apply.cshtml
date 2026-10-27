@@ -1,0 +1,97 @@
+@model EmployeeLeaveManagement.Models.LeaveRequestViewModel
+
+@{
+    ViewData["Title"] = "Apply for Leave";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-paper-plane"></i> Apply for Leave</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Apply" method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="LeaveRequest.CategoryID" class="form-label">Leave Type *</label>
+                            <select asp-for="LeaveRequest.CategoryID" class="form-select" asp-items="@(new SelectList(Model.Categories, "CategoryID", "CategoryName"))">
+                                <option value="">-- Select Leave Type --</option>
+                            </select>
+                            <span asp-validation-for="LeaveRequest.CategoryID" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LeaveRequest.StartDate" class="form-label">Start Date *</label>
+                                    <input asp-for="LeaveRequest.StartDate" type="date" class="form-control" />
+                                    <span asp-validation-for="LeaveRequest.StartDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LeaveRequest.EndDate" class="form-label">End Date *</label>
+                                    <input asp-for="LeaveRequest.EndDate" type="date" class="form-control" />
+                                    <span asp-validation-for="LeaveRequest.EndDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="LeaveRequest.Reason" class="form-label">Reason *</label>
+                            <textarea asp-for="LeaveRequest.Reason" class="form-control" rows="4" placeholder="Please provide detailed reason for leave..."></textarea>
+                            <span asp-validation-for="LeaveRequest.Reason" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Note: Weekends (Saturday/Sunday) are automatically excluded from leave days calculation.
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="MyRequests" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to My Requests
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function calculateTotalDays() {
+            var startDate = new Date($('#LeaveRequest_StartDate').val());
+            var endDate = new Date($('#LeaveRequest_EndDate').val());
+            
+            if (startDate && endDate && startDate <= endDate) {
+                var totalDays = 0;
+                var currentDate = new Date(startDate);
+                
+                while (currentDate <= endDate) {
+                    var dayOfWeek = currentDate.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        totalDays++;
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                if (totalDays > 0) {
+                    $('#totalDaysDisplay').remove();
+                    $('.alert-info').after('<div id="totalDaysDisplay" class="alert alert-success mt-2"><i class="fas fa-calculator"></i> Total working days: <strong>' + totalDays + '</strong> days</div>');
+                }
+            }
+        }
+        
+        $('#LeaveRequest_StartDate, #LeaveRequest_EndDate').change(calculateTotalDays);
+    </script>
+}

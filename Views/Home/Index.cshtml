@@ -1,0 +1,1103 @@
+﻿@model EmployeeLeaveManagement.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+}
+
+<div class="container-fluid">
+
+    <!-- ====================================================== -->
+    <!-- PAGE TITLE -->
+    <!-- ====================================================== -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h2 class="page-title">Dashboard</h2>
+                <p class="text-muted">
+                    Welcome back, @User.Identity.Name!
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====================================================== -->
+    <!-- MASTER ADMIN DASHBOARD -->
+    <!-- ====================================================== -->
+
+    @if (userRole == "MasterAdmin")
+    {
+        <!-- ================================================== -->
+        <!-- MASTER ADMIN STATISTICS -->
+        <!-- ================================================== -->
+
+        <div class="row">
+
+            <!-- Total Employees -->
+            <div class="col-md-3">
+                <div class="card bg-primary text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Employees</h6>
+                                <h2 class="mb-0">
+                                    @Model.TotalEmployees
+                                </h2>
+                            </div>
+
+                            <i class="fas fa-users fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Total Admins -->
+            <div class="col-md-3">
+                <div class="card bg-dark text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Admins</h6>
+                                <h2 class="mb-0">
+                                    @Model.TotalAdmins
+                                </h2>
+                            </div>
+
+                            <i class="fas fa-user-shield fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Pending Approvals -->
+            <div class="col-md-3">
+                <div class="card bg-warning text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Pending Approvals</h6>
+                                <h2 class="mb-0">
+                                    @Model.PendingRequests
+                                </h2>
+                            </div>
+
+                            <i class="fas fa-hourglass-half fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Total Staff -->
+            <div class="col-md-3">
+                <div class="card bg-success text-white mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Total Staff</h6>
+
+                                <h2 class="mb-0">
+                                    @(Model.TotalEmployees + Model.TotalAdmins)
+                                </h2>
+                            </div>
+
+                            <i class="fas fa-building fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ================================================== -->
+        <!-- MASTER ADMIN - EMPLOYEE LEAVE BALANCES -->
+        <!-- ================================================== -->
+
+        <div class="row mt-2">
+
+            <div class="col-md-12">
+
+                <div class="card">
+
+                    <div class="card-header d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h5 class="mb-0">
+                                Employee Leave Balances
+                            </h5>
+
+                            <small class="text-muted">
+                                Select an employee to view their leave balance details
+                            </small>
+                        </div>
+
+                        <span class="badge bg-primary">
+                            @Model.EmployeeLeaveBalances.Count Staff
+                        </span>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        @if (Model.EmployeeLeaveBalances.Any())
+                        {
+                            <!-- Employee Dropdown -->
+
+                            <div class="row mb-4">
+
+                                <div class="col-md-6">
+
+                                    <label for="employeeSelect" class="form-label fw-bold">
+                                        <i class="fas fa-user me-2"></i>
+                                        Select Employee
+                                    </label>
+
+                                    <select id="employeeSelect"
+                                            class="form-select"
+                                            onchange="showEmployeeBalances(this.value)">
+
+                                        <option value="">
+                                            -- Select an Employee --
+                                        </option>
+
+                                        @foreach (var employee in Model.EmployeeLeaveBalances.OrderBy(e => e.EmployeeName))
+                                        {
+                                            <option value="@employee.EmployeeId">
+                                                @employee.EmployeeName
+
+                                                @if (!string.IsNullOrWhiteSpace(employee.EmployeeCode))
+                                                {
+                                                    <text>
+                                                        (@employee.EmployeeCode)
+                                                    </text>
+                                                }
+
+                                                @if (employee.Role == "Admin")
+                                                {
+                                                    <text>
+                                                        👑 Admin
+                                                    </text>
+                                                }
+
+                                            </option>
+                                        }
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Employee Balance Details -->
+
+                            <div id="employeeBalanceContainer">
+
+                                @foreach (var employee in Model.EmployeeLeaveBalances)
+                                {
+                                    <div id="balance-@employee.EmployeeId"
+                                         class="employee-balance-detail"
+                                         style="display: none;">
+
+                                        <!-- Employee Info Header -->
+
+                                        <div class="alert alert-info mb-3">
+
+                                            <div class="d-flex justify-content-between align-items-center">
+
+                                                <div>
+
+                                                    <h5 class="mb-1">
+                                                        <i class="fas fa-user-circle me-2"></i>
+                                                        <strong>@employee.EmployeeName</strong>
+                                                    </h5>
+
+                                                    @if (!string.IsNullOrWhiteSpace(employee.EmployeeCode))
+                                                    {
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-id-badge me-1"></i>
+                                                            @employee.EmployeeCode
+                                                        </small>
+                                                    }
+
+                                                </div>
+
+
+                                                <div>
+
+                                                    @if (employee.Role == "Admin")
+                                                    {
+                                                        <span class="badge bg-dark">
+                                                            <i class="fas fa-user-shield"></i>
+                                                            Admin
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-user"></i>
+                                                            Employee
+                                                        </span>
+                                                    }
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <!-- Balance Table -->
+
+                                        @if (employee.Balances.Any())
+                                        {
+                                            <div class="table-responsive">
+
+                                                <table class="table table-hover align-middle">
+
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Leave Type</th>
+                                                            <th>Total Days</th>
+                                                            <th>Used Days</th>
+                                                            <th>Remaining</th>
+                                                            <th>Balance</th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+
+                                                        @foreach (var balance in employee.Balances)
+                                                        {
+                                                            <tr>
+
+                                                                <td>
+                                                                    <strong>
+                                                                        @balance.CategoryName
+                                                                    </strong>
+                                                                </td>
+
+                                                                <td>
+                                                                    @balance.TotalDays
+                                                                </td>
+
+                                                                <td>
+                                                                    @balance.UsedDays
+                                                                </td>
+
+                                                                <td>
+                                                                    <strong>
+                                                                        @balance.RemainingDays
+                                                                    </strong>
+                                                                </td>
+
+                                                                <td style="min-width: 150px;">
+
+                                                                    @{
+                                                                        var percentage = balance.TotalDays > 0
+                                                                            ? (balance.RemainingDays * 100) / balance.TotalDays
+                                                                            : 0;
+                                                                    }
+
+                                                                    <div class="progress" style="height: 8px;">
+
+                                                                        <div class="progress-bar bg-success"
+                                                                             role="progressbar"
+                                                                             style="width: @percentage%;"
+                                                                             aria-valuenow="@balance.RemainingDays"
+                                                                             aria-valuemin="0"
+                                                                             aria-valuemax="@balance.TotalDays">
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                    <small class="text-muted">
+                                                                        @percentage% remaining
+                                                                    </small>
+
+                                                                </td>
+
+                                                            </tr>
+                                                        }
+
+                                                    </tbody>
+
+                                                </table>
+
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-3">
+
+                                                <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+
+                                                <p class="text-muted mb-0">
+                                                    No leave balance configured for this employee.
+                                                </p>
+
+                                            </div>
+                                        }
+
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <!-- No Employee Selected -->
+
+                            <div id="noSelectionMessage"
+                                 class="text-center py-5">
+
+                                <i class="fas fa-hand-pointer fa-3x text-muted mb-3"></i>
+
+                                <h5>Select an Employee</h5>
+
+                                <p class="text-muted">
+                                    Please select an employee from the dropdown above to view their leave balance details.
+                                </p>
+
+                            </div>
+
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+
+                                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+
+                                <h6>No Leave Balance Data</h6>
+
+                                <p class="text-muted mb-0">
+                                    No active employees or administrators have leave balance records yet.
+                                </p>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================== -->
+        <!-- MASTER ADMIN CONTROLS -->
+        <!-- ================================================== -->
+
+        <div class="row mt-3">
+
+            <div class="col-md-12">
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            Master Admin Controls
+                        </h5>
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <a href="@Url.Action("PendingRequests", "Leave")"
+                           class="btn btn-warning me-2">
+
+                            <i class="fas fa-clock"></i>
+
+                            Review Pending Approvals
+
+                        </a>
+
+
+                        <a href="@Url.Action("Index", "Employee")"
+                           class="btn btn-primary me-2">
+
+                            <i class="fas fa-users"></i>
+
+                            Manage Employees
+
+                        </a>
+
+
+                        <a href="@Url.Action("Create", "Employee")"
+                           class="btn btn-success">
+
+                            <i class="fas fa-user-plus"></i>
+
+                            Add Employee
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ====================================================== -->
+    <!-- NORMAL ADMIN DASHBOARD -->
+    <!-- ====================================================== -->
+
+    @if (userRole == "Admin")
+    {
+        <!-- Admin Statistics -->
+
+        <div class="row">
+
+            <div class="col-md-3">
+
+                <div class="card bg-primary text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Employees
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.TotalEmployees
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <div class="card bg-warning text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Pending
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.PendingRequests
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-hourglass-half fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <div class="card bg-success text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Approved
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.ApprovedRequests
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-check-circle fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <div class="card bg-danger text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Rejected
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.RejectedRequests
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-times-circle fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Admin Recent Leave Requests -->
+
+        <div class="row">
+
+            <div class="col-md-12">
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <h5>
+                            Recent Leave Requests
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Leave Type</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Total Days</th>
+                                        <th>Status</th>
+                                        <th>Applied Date</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    @foreach (var request in Model.RecentRequests)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @request.EmployeeName
+                                            </td>
+
+                                            <td>
+                                                @request.CategoryName
+                                            </td>
+
+                                            <td>
+                                                @request.StartDate.ToString("dd/MM/yyyy")
+                                            </td>
+
+                                            <td>
+                                                @request.EndDate.ToString("dd/MM/yyyy")
+                                            </td>
+
+                                            <td>
+                                                @request.TotalDays
+                                            </td>
+
+                                            <td>
+
+                                                @if (request.Status == "Pending")
+                                                {
+                                                    <span class="badge bg-warning">
+                                                        Pending
+                                                    </span>
+                                                }
+                                                else if (request.Status == "Approved")
+                                                {
+                                                    <span class="badge bg-success">
+                                                        Approved
+                                                    </span>
+                                                }
+                                                else if (request.Status == "Rejected")
+                                                {
+                                                    <span class="badge bg-danger">
+                                                        Rejected
+                                                    </span>
+                                                }
+
+                                            </td>
+
+                                            <td>
+                                                @request.AppliedDate.ToString("dd/MM/yyyy")
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Admin Quick Actions -->
+
+        <div class="row mt-3">
+
+            <div class="col-md-12">
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <h5>
+                            Quick Actions
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <a href="@Url.Action("PendingRequests", "Leave")"
+                           class="btn btn-warning me-2">
+
+                            <i class="fas fa-clock"></i>
+
+                            Review Pending Requests
+
+                        </a>
+
+
+                        <a href="@Url.Action("Apply", "Leave")"
+                           class="btn btn-primary me-2">
+
+                            <i class="fas fa-plus"></i>
+
+                            Apply for Leave
+
+                        </a>
+
+
+                        <a href="@Url.Action("LeaveBalance", "Leave")"
+                           class="btn btn-info">
+
+                            <i class="fas fa-chart-line"></i>
+
+                            View Leave Balances
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ====================================================== -->
+    <!-- EMPLOYEE DASHBOARD -->
+    <!-- ====================================================== -->
+
+    @if (userRole != "MasterAdmin" && userRole != "Admin")
+    {
+        <!-- Employee Statistics -->
+
+        <div class="row">
+
+            <div class="col-md-3">
+
+                <div class="card bg-primary text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Total Requests
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @(Model.PendingRequests +
+                                      Model.ApprovedRequests +
+                                      Model.RejectedRequests)
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <div class="card bg-warning text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Pending
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.PendingRequests
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-hourglass-half fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <div class="card bg-success text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Approved
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.ApprovedRequests
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-check-circle fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-3">
+
+                <div class="card bg-danger text-white mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <h6 class="mb-0">
+                                    Rejected
+                                </h6>
+
+                                <h2 class="mb-0">
+                                    @Model.RejectedRequests
+                                </h2>
+
+                            </div>
+
+                            <i class="fas fa-times-circle fa-3x opacity-50"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Employee Pending Requests + Leave Balances -->
+
+        <div class="row">
+
+            <!-- Pending Requests -->
+
+            <div class="col-md-6">
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <h5>
+                            Your Pending Requests
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        @if (Model.MyPendingRequests.Any())
+                        {
+                            <div class="list-group">
+
+                                @foreach (var request in Model.MyPendingRequests)
+                                {
+                                    <div class="list-group-item">
+
+                                        <div class="d-flex justify-content-between align-items-center">
+
+                                            <div>
+
+                                                <h6 class="mb-1">
+                                                    @request.CategoryName
+                                                </h6>
+
+                                                <small>
+                                                    @request.StartDate.ToString("dd/MM/yyyy")
+                                                    -
+                                                    @request.EndDate.ToString("dd/MM/yyyy")
+                                                </small>
+
+                                                <br />
+
+                                                <small class="text-muted">
+                                                    @request.Reason
+                                                </small>
+
+                                            </div>
+
+                                            <span class="badge bg-warning">
+                                                Pending
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">
+                                No pending requests
+                            </p>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Leave Balances -->
+
+            <div class="col-md-6">
+
+                <div class="card">
+
+                    <div class="card-header">
+                        <h5>
+                            Leave Balances
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead>
+
+                                    <tr>
+                                        <th>Leave Type</th>
+                                        <th>Total Days</th>
+                                        <th>Used Days</th>
+                                        <th>Remaining</th>
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    @foreach (var balance in Model.LeaveBalances)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                @balance.CategoryName
+                                            </td>
+
+                                            <td>
+                                                @balance.TotalDays
+                                            </td>
+
+                                            <td>
+                                                @balance.UsedDays
+                                            </td>
+
+                                            <td>
+
+                                                <strong>
+                                                    @balance.RemainingDays
+                                                </strong>
+
+                                                <div class="progress mt-1"
+                                                     style="height: 5px;">
+
+                                                    @{
+                                                        var employeeBalancePercentage =
+                                                            balance.TotalDays > 0
+                                                                ? (balance.RemainingDays * 100) / balance.TotalDays
+                                                                : 0;
+                                                    }
+
+                                                    <div class="progress-bar bg-success"
+                                                         style="width: @employeeBalancePercentage%;">
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+
+<!-- ========================================================== -->
+<!-- JAVASCRIPT FOR MASTER ADMIN EMPLOYEE BALANCE DROPDOWN -->
+<!-- ========================================================== -->
+
+@section Scripts {
+
+    <script>
+
+        function showEmployeeBalances(employeeId) {
+
+            // Hide all balance details
+            document.querySelectorAll('.employee-balance-detail')
+                .forEach(function (el) {
+                    el.style.display = 'none';
+                });
+
+
+            // Hide the "no selection" message
+            var noSelectionMsg =
+                document.getElementById('noSelectionMessage');
+
+            if (noSelectionMsg) {
+                noSelectionMsg.style.display = 'none';
+            }
+
+
+            // Show selected employee's balance
+            if (employeeId && employeeId !== '') {
+
+                var selectedBalance =
+                    document.getElementById('balance-' + employeeId);
+
+                if (selectedBalance) {
+                    selectedBalance.style.display = 'block';
+                }
+
+            }
+            else {
+
+                // Show "no selection" message
+                if (noSelectionMsg) {
+                    noSelectionMsg.style.display = 'block';
+                }
+
+            }
+
+        }
+
+    </script>
+
+}

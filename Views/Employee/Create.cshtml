@@ -1,0 +1,225 @@
+@model EmployeeLeaveManagement.Models.User
+
+@{
+    ViewData["Title"] = "Add Employee";
+    bool isMasterAdmin = User.IsInRole("MasterAdmin");
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<div class="card shadow-sm">
+
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">
+            <i class="fas fa-user-plus"></i>
+            Add New Employee
+        </h3>
+    </div>
+
+    <div class="card-body">
+
+        <form asp-action="Create" method="post">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3"></div>
+
+            <div class="row">
+
+                <!-- Employee Code -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="EmployeeCode"></label>
+                    <input asp-for="EmployeeCode"
+                           class="form-control"
+                           placeholder="EMP005" />
+                    <span asp-validation-for="EmployeeCode"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Password -->
+                <div class="col-md-6 mb-3">
+                    <label>Password</label>
+                    <input asp-for="PasswordHash"
+                           type="password"
+                           class="form-control"
+                           placeholder="Enter Password" />
+                    <span asp-validation-for="PasswordHash"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- First Name -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName"
+                           class="form-control" />
+                    <span asp-validation-for="FirstName"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Last Name -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName"
+                           class="form-control" />
+                    <span asp-validation-for="LastName"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-control" />
+                    <span asp-validation-for="Email"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Join Date -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="JoinDate"></label>
+                    <input asp-for="JoinDate"
+                           type="date"
+                           class="form-control" />
+                    <span asp-validation-for="JoinDate"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Role -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Role"></label>
+
+                    <select asp-for="Role"
+                            id="roleDropdown"
+                            class="form-select">
+
+                        <option value="">-- Select Role --</option>
+
+                        @if (isMasterAdmin)
+                        {
+                            <option value="Admin">Admin</option>
+                        }
+
+                        <option value="Employee">Employee</option>
+
+                    </select>
+
+                    <span asp-validation-for="Role"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Reporting Admin -->
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="ManagerID">
+                        Reporting Admin
+                    </label>
+
+                    <select asp-for="ManagerID"
+                            id="managerDropdown"
+                            class="form-select">
+
+                        <option value="">
+                            -- Select Reporting Admin --
+                        </option>
+
+                        @if (ViewBag.Admins != null)
+                        {
+                            foreach (var admin in (List<EmployeeLeaveManagement.Models.User>)ViewBag.Admins)
+                            {
+                                <option value="@admin.EmployeeID">
+                                    @admin.FullName (@admin.EmployeeCode)
+                                </option>
+                            }
+                        }
+
+                    </select>
+
+                    <span asp-validation-for="ManagerID"
+                          class="text-danger"></span>
+
+                    <small id="managerHelp"
+                           class="text-muted">
+                        Select the Reporting Admin.
+                    </small>
+
+                </div>
+
+            </div>
+
+            <hr />
+
+            <button type="submit"
+                    class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                Save Employee
+            </button>
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const role = document.getElementById("roleDropdown");
+    const manager = document.getElementById("managerDropdown");
+    const help = document.getElementById("managerHelp");
+
+    const isAdmin =
+        @(User.IsInRole("Admin").ToString().ToLower());
+
+    function updateUI() {
+
+        if (isAdmin) {
+
+            manager.disabled = true;
+            manager.value = "";
+
+            help.innerText =
+                "Employees created by Admin are automatically assigned to you.";
+
+            return;
+        }
+
+        if (role.value === "Admin") {
+
+            manager.value = "";
+
+            manager.disabled = true;
+
+            help.innerText =
+                "Admins report directly to the Master Admin.";
+
+        }
+        else {
+
+            manager.disabled = false;
+
+            help.innerText =
+                "Select the Reporting Admin.";
+
+        }
+
+    }
+
+    role.addEventListener("change", updateUI);
+
+    updateUI();
+
+});
+
+</script>
+}
